@@ -4,6 +4,7 @@ import au.com.bytecode.opencsv.CSVReader;
 import hex.ModelCategory;
 import hex.genmodel.GenModel;
 import hex.genmodel.MojoModel;
+import hex.genmodel.algos.glrm.GlrmMojoModel;
 import hex.genmodel.easy.EasyPredictModelWrapper;
 import hex.genmodel.easy.RowData;
 import hex.genmodel.easy.prediction.*;
@@ -28,6 +29,7 @@ public class PredictCsv {
   private boolean useDecimalOutput = false;
   public char separator = ',';   // separator used to delimite input datasets
   public boolean setInvNumNA = false;    // enable .setConvertInvalidNumbersToNa(true)
+  boolean returnGLRMReconstrut = false; // for GLRM, return x factor by default unless set this to true
   // Model instance
   private EasyPredictModelWrapper model;
 
@@ -91,8 +93,6 @@ public class PredictCsv {
         int numNums = this.model.m.nfeatures()-numCats;
         String[][] domainValues = this.model.m.getDomainValues();
         int lastCatIdx = numCats-1;
-        //int additionalCatCols = this.model.getUnknownCategoricalLevelsSeenPerColumn().size();
-       // ConcurrentHashMap<String, AtomicLong> temp = this.model.getUnknownCategoricalLevelsSeenPerColumn();
 
         for (int index = 0; index <= lastCatIdx  ; index++) { // add names for categorical columns
           String[] tdomains = domainValues[index]; //this.model.m.getDomainValues(index)
@@ -138,6 +138,29 @@ public class PredictCsv {
 
       case Regression:
         output.write("predict");
+        break;
+
+      case DimReduction:  // will write factor or the precdicted value depending on what the user wants
+        int datawidth;
+        String head;
+        String[] colnames=null;
+        if (returnGLRMReconstrut && model.m instanceof GlrmMojoModel) {
+          datawidth = ((GlrmMojoModel) model.m)._permutation.length;
+          colnames =  this.model.m.getNames();
+          head = "reconstr_";
+        } else {
+          datawidth = ((GlrmMojoModel) model.m)._ncolX;
+          head = "Arch";
+        }
+
+        int lastData = datawidth-1;
+        for (int index = 0; index < datawidth; index++) {  // add the numerical column names
+          String temp = returnGLRMReconstrut ?head+(index+1):head+colnames[index];
+          output.write(temp);
+
+          if (index < lastData )
+            output.write(',');
+        }
         break;
 
       default:
@@ -226,6 +249,26 @@ public class PredictCsv {
             break;
           }
 
+          case DimReduction: {
+            DimReductionModelPrediction p = model.predictDimReduction(row);
+            double[] out;
+
+            if (returnGLRMReconstrut && model.m instanceof GlrmMojoModel) {
+              out = p.reconstructed;
+            } else {
+              out = p.dimensions;
+            }
+
+            int lastOne = out.length-1;
+            for (int i=0; i < out.length; i++) {
+              output.write(myDoubleToString(out[i]));
+
+              if (i < lastOne)
+                output.write(',');
+            }
+            break;
+          }
+
           default:
             throw new Exception("Unknown model category " + category);
         }
@@ -278,6 +321,7 @@ public class PredictCsv {
     System.out.println("     --separator Separator to be used in input file containing test data set.");
     System.out.println("     --decimal Use decimal numbers in the output (default is to use hexademical).");
     System.out.println("     --setConvertInvalidNum Will call .setConvertInvalidNumbersToNa(true) when loading models.");
+    System.out.println("     --glrmReconstruct will return the reconstructed dataset for GLRM mojo instead of X factor derived from the dataset.");
     System.out.println("");
     System.exit(1);
   }
@@ -291,6 +335,8 @@ public class PredictCsv {
         if (s.equals("--header")) continue;
         if (s.equals("--decimal"))
           useDecimalOutput = true;
+        else if (s.equals("--glrmReconstruct"))
+          returnGLRMReconstrut =true;
         else if (s.equals("--setConvertInvalidNum"))
           setInvNumNA=true;
         else {
