@@ -4,6 +4,7 @@ import hex.ModelCategory;
 import hex.genmodel.GenModel;
 import hex.genmodel.IClusteringModel;
 import hex.genmodel.algos.deepwater.DeepwaterMojoModel;
+import hex.genmodel.algos.tree.SharedTreeMojoModel;
 import hex.genmodel.algos.word2vec.WordEmbeddingModel;
 import hex.genmodel.easy.error.VoidErrorConsumer;
 import hex.genmodel.easy.exception.PredictException;
@@ -16,7 +17,10 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URL;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * An easy-to-use prediction wrapper for generated models.  Instantiate as follows.  The following two are equivalent.
@@ -56,6 +60,11 @@ public class EasyPredictModelWrapper implements Serializable {
   private final boolean convertUnknownCategoricalLevelsToNa;
   private final boolean convertInvalidNumbersToNa;
   private final boolean useExtendedOutput;
+  private boolean getLeafAssignment=false;
+
+  public void enableLeafAssignment() {
+    getLeafAssignment=true;
+  }
 
   /**
    * Observer interface with methods corresponding to errors during the prediction.
@@ -412,6 +421,8 @@ public class EasyPredictModelWrapper implements Serializable {
     double[] preds = preamble(ModelCategory.Binomial, data, offset);
 
     BinomialModelPrediction p = new BinomialModelPrediction();
+    if (getLeafAssignment)  // only get leaf node assignment if enabled
+      p.leafNodeAssignments = leafNodeAssignment(data);  // assign leaf node assignment if desired
     double d = preds[0];
     p.labelIndex = (int) d;
     String[] domainValues = m.getDomainValues(m.getResponseIdx());
@@ -425,6 +436,15 @@ public class EasyPredictModelWrapper implements Serializable {
       System.arraycopy(preds, 1, p.calibratedClassProbabilities, 0, p.calibratedClassProbabilities.length);
     }
     return p;
+  }
+
+  private String[] leafNodeAssignment(RowData data) throws PredictException {
+    String[] leafNodeAssignments = null;
+    double[] rawData = nanArray(m.nfeatures());
+    rawData = fillRawData(data, rawData);
+    leafNodeAssignments = ((SharedTreeMojoModel) m).getDecisionPath(rawData);
+
+    return leafNodeAssignments;
   }
 
   /**
@@ -450,6 +470,8 @@ public class EasyPredictModelWrapper implements Serializable {
     double[] preds = preamble(ModelCategory.Multinomial, data, offset);
 
     MultinomialModelPrediction p = new MultinomialModelPrediction();
+    if (getLeafAssignment)
+      p.leafNodeAssignments = leafNodeAssignment(data);  // assign leaf node assignment if desired
     p.classProbabilities = new double[m.getNumResponseClasses()];
     p.labelIndex = (int) preds[0];
     String[] domainValues = m.getDomainValues(m.getResponseIdx());
@@ -569,6 +591,8 @@ public class EasyPredictModelWrapper implements Serializable {
     double[] preds = preamble(ModelCategory.Regression, data, offset);
 
     RegressionModelPrediction p = new RegressionModelPrediction();
+    if (getLeafAssignment)
+      p.leafNodeAssignments = leafNodeAssignment(data);  // assign leaf node assignment if desired
     p.value = preds[0];
 
     return p;
