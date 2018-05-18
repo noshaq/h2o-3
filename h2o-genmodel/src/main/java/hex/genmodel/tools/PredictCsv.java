@@ -143,10 +143,9 @@ public class PredictCsv {
       case DimReduction:  // will write factor or the precdicted value depending on what the user wants
         int datawidth;
         String head;
-        String[] colnames=null;
+        String[] colnames =  this.model.m.getNames();;
         if (returnGLRMReconstrut && model.m instanceof GlrmMojoModel) {
           datawidth = ((GlrmMojoModel) model.m)._permutation.length;
-          colnames =  this.model.m.getNames();
           head = "reconstr_";
         } else {
           datawidth = ((GlrmMojoModel) model.m)._ncolX;
@@ -155,7 +154,7 @@ public class PredictCsv {
 
         int lastData = datawidth-1;
         for (int index = 0; index < datawidth; index++) {  // add the numerical column names
-          String temp = returnGLRMReconstrut ?head+(index+1):head+colnames[index];
+          String temp = returnGLRMReconstrut ? head+colnames[index] : head+(index+1);
           output.write(temp);
 
           if (index < lastData )
@@ -254,9 +253,9 @@ public class PredictCsv {
             double[] out;
 
             if (returnGLRMReconstrut && model.m instanceof GlrmMojoModel) {
-              out = p.reconstructed;
+              out = p.reconstructed;  // reconstructed A
             } else {
-              out = p.dimensions;
+              out = p.dimensions; // x factors
             }
 
             int lastOne = out.length-1;
