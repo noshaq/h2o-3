@@ -269,9 +269,9 @@ predict.H2OAutoML <- function(object, newdata, ...) {
   h2o.getFrame(dest_key)
 }
 
-#' Get an R reference to an AutoML instance
+#' Get an R object that is a subclass of \linkS4class{H2OAutoML}
 #'
-#' Returns a reference to an existing AutoML object in the H2O instance.
+#' Returns an object that is a subclass of \linkS4class{H2OAutoML}.
 #'
 #' @param automl_key A string indicating the unique automl_key of the automl instance to retrieve.
 #' @return Returns an object that is a subclass of \linkS4class{H2OAutoML}.
