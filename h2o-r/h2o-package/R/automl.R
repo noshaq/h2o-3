@@ -271,8 +271,6 @@ predict.H2OAutoML <- function(object, newdata, ...) {
 
 #' Get an R object that is a subclass of \linkS4class{H2OAutoML}
 #'
-#' Returns an object that is a subclass of \linkS4class{H2OAutoML}.
-#'
 #' @param automl_key A string indicating the unique automl_key of the automl instance to retrieve.
 #' @return Returns an object that is a subclass of \linkS4class{H2OAutoML}.
 #' @examples
