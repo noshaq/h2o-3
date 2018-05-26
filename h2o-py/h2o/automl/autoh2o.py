@@ -1,6 +1,5 @@
 # -*- encoding: utf-8 -*-
 import h2o
-import os
 from h2o.exceptions import H2OValueError
 from h2o.job import H2OJob
 from h2o.frame import H2OFrame
