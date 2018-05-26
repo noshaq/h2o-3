@@ -416,7 +416,7 @@ def get_automl(automl_key):
     Retrieve information about an AutoML instance.
 
     :param str automl_key: A string indicating the unique automl_key of the automl instance to retrieve.
-    :returns: A dictionary containing the AutoML key, project_name, leader model id, and leaderboard.
+    :returns: A dictionary containing the AutoML key, project_name, leader model, and leaderboard.
     """
     automl_json = h2o.api("GET /99/AutoML/%s" % automl_key)
     project_name = automl_json["project_name"]
@@ -427,6 +427,7 @@ def get_automl(automl_key):
     else:
         leader_id = None
 
+    leader = h2o.get_model(leader_id)
     # Intentionally mask the progress bar here since showing multiple progress bars is confusing to users.
     # If any failure happens, revert back to user's original setting for progress and display the error message.
     is_progress = H2OJob.__PROGRESS_BAR__
@@ -443,5 +444,5 @@ def get_automl(automl_key):
             h2o.show_progress()
 
     leaderboard = leaderboard[1:]
-    automl_dict = {'automl_key': automl_key, 'project_name': project_name, "leader": leader_id, "leaderboard": leaderboard}
+    automl_dict = {'automl_key': automl_key, 'project_name': project_name, "leader": leader, "leaderboard": leaderboard}
     return automl_dict
