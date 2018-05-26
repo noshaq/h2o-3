@@ -284,16 +284,17 @@ predict.H2OAutoML <- function(object, newdata, ...) {
 #' }
 #' @export
 h2o.getAutoML <- function(automl_key) {
-  automl_job <- h2o:::.h2o.__remoteSend(h2oRestApiVersion = 99, method = "GET", page = paste0("AutoML/", automl_key))
+  automl_job <- .h2o.__remoteSend(h2oRestApiVersion = 99, method = "GET", page = paste0("AutoML/", automl_key))
   leaderboard <- as.data.frame(automl_job["leaderboard_table"]$leaderboard_table)
   row.names(leaderboard) <- seq(nrow(leaderboard))
-  leaderboard <- h2o::as.h2o(leaderboard)
+  leaderboard <- as.h2o(leaderboard)
   leaderboard[,2:length(leaderboard)] <- as.numeric(leaderboard[,2:length(leaderboard)])
-  leader <- h2o::h2o.getModel(automl_job$leaderboard$models[[1]]$name)
+  leader <- h2o.getModel(automl_job$leaderboard$models[[1]]$name)
   project <- automl_job$project
   
   # Make AutoML object
   return(new("H2OAutoML",
+             automl_key = automl_key,
              project_name = project,
              leader = leader,
              leaderboard = leaderboard
