@@ -22,6 +22,7 @@ automl.get.automl.test <- function() {
     aml1 <- h2o.automl(y = y,
                         training_frame = train,
                         max_runtime_secs = max_runtime_secs,
+                        max_models = max_models,
                         project_name = "aml1")
 
     #Use h2o.getAutoML to get previous automl instance
