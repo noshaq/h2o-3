@@ -31,7 +31,7 @@ def prostate_automl_get_automl():
     assert aml.automl_key == get_aml["automl_key"]
     get_aml_leader = get_aml["leader"]
     assert aml.leader.model_id == get_aml_leader.model_id
-    assert aml.leaderboard == get_aml["leaderboard"]
+    assert aml.leaderboard.get_frame_data() == get_aml["leaderboard"].get_frame_data()
 
 if __name__ == "__main__":
     pyunit_utils.standalone_test(prostate_automl_get_automl)

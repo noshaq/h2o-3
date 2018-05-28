@@ -29,7 +29,7 @@ automl.get.automl.test <- function() {
     
     expect_equal(aml1@project_name, get_aml1@project_name)
     expect_equal(aml1@automl_key, get_aml1@automl_key)
-    expect_equal(aml1@leader, get_aml1@leader)
+    expect_equal(aml1@leader@model_id, get_aml1@leader@model_id)
     expect_equal(aml1@leaderboard, get_aml1@leaderboard)
 
 }
